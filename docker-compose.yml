@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  # php-fpmコンテナ
+  php:
+    container_name: scrum-engine_php
+    build:
+      context: ./docker/php
+    volumes:
+      - ${APP_PATH}:/var/www/html
+    networks:
+      - scrum-engine_network
+    depends_on:
+      - db
+
+  # Nginxコンテナ
+  nginx:
+    container_name: scrum-engine_nginx
+    build: 
+      context: ./docker/nginx
+    ports:
+      - ${NGINX_PORT}:80
+    volumes:
+      - ${APP_PATH}:/var/www/html
+    networks:
+      - scrum-engine_network
+    depends_on:
+      - php
+
+  # MariaDBサービス
+  db:
+    container_name: scrum-engine_db
+    build:
+      context: ./docker/db
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${MARIADB_DATABASE}
+      MARIADB_USER: ${MARIADB_USER}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - scrum-engine_network
+    ports:
+      - ${DB_PORT}:3306
+
+volumes:
+  db_data:
+
+networks:
+  scrum-engine_network:
+    driver: bridge
